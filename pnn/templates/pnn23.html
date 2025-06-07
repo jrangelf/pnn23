@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> {# Adicionado para responsividade básica #}
+    <title>Formulário de Cálculo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+
+    <style>
+        /* Oculta os campos de resultado na tela */
+        .resultado-campo {
+            display: none;
+        }
+
+        /* Mostra na impressão */
+        @media print {
+            .resultado-campo {
+                display: block;
+            }
+            /* Estilos adicionais para impressão podem ser colocados aqui */
+            body * { visibility: hidden; }
+            #print-section, #print-section * { visibility: visible; }
+            #print-section { position: absolute; left: 0; top: 0; width: 100%; padding: 10px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container mt-3 mb-3">
+   
+    <h4 class="text-center">PNN 23 - Anistiado político<br>Apuração de valor economizado</h4>
+    <hr>
+
+    {# Convertido action para Flask/Jinja2. Removido 'form my-2 my-lg-0' que parecia erro de digitação. #}
+    <form id="pnn23" enctype="multipart/form-data" action="{{ url_for('pnn.pnn23') }}" method="POST">
+        {# {% csrf_token %} Removido #}
+
+        <div class="row g-1 p-0 mb-2">
+            <div class="col-6">
+                <label for="processo" class="form-label">Processo:</label>
+                <input type="text" class="form-control" id="processo" name="processo" 
+                       value="{{ valores[1]|default('', true) }}">
+            </div>
+            <div class="col-6">
+                <label for="competencia" class="form-label">Competência:</label>
+                <input type="text" class="form-control" id="competencia" name="competencia" 
+                       value="{{ valores[2]|default('', true) }}">
+            </div>
+        </div>       
+    
+        <div class="row g-1 p-0 mb-2">
+            <div class="col-6">
+                <label for="exequente" class="form-label">Exequente:</label>
+                <input type="text" class="form-control" id="exequente" name="exequente" 
+                       value="{{ valores[3]|default('', true) }}">
+            </div>
+            <div class="col-6">
+                <label for="executado" class="form-label">Executado:</label>
+                <input type="text" class="form-control" id="executado" name="executado" 
+                       value="{{ valores[4]|default('', true) }}">
+            </div>
+        </div>
+
+        <hr>
+        <div class="row g-1 p-0 mb-2 align-items-center">
+            <div class="col-md-3 col-sm-6">
+                <label for="atualizacao" class="form-label">Data de atualização (mês/ano):</label>
+                <input type="month" class="form-control" id="atualizacao" name="atualizacao" 
+                       value="{{ valores[5]|default('', true) }}" required>
+                 <div class="invalid-feedback">Informe a data de atualização.</div> {# Para validação Bootstrap #}
+            </div>
+            <div class="col-md-1 d-none d-md-block"></div>
+            <div class="col-md-8 col-sm-6">
+                <h6>Correção monetária:</h6>
+                <p>Manual de Cálculos CJF (IPCA-E até nov/2021 e selic a partir de dez/2021 - EC 113/2021).</p>
+            </div>
+        </div>
+
+        <hr>
+        <div class="row g-1 p-0 mb-2 align-items-center">
+            <div class="col-md-3 col-sm-6">
+                <p>Juros de mora</p>
+                <div class="form-check form-switch ">
+                    <input type="hidden" name="aplicar_juros" value="off">
+                    <input class="form-check-input" type="checkbox" id="aplicar_juros" name="aplicar_juros" value="on" 
+                           checked> 
+                    <label class="form-check-label" for="aplicar_juros">Aplicar juros</label>
+                </div>
+            </div>
+            <div class="col-md-1 d-none d-md-block"></div>
+            <div class="col-md-8 col-sm-6">
+                <h6>Taxa de juros:</h6>
+                <p>1% até jul/2001, 0,5% de ago/2001 a jun/2009 e taxa poupança de jul/2009 até nov/2021.</p>
+            </div>
+        </div>
+
+        <div class="row g-1 p-0 mb-2">
+            <div class="col-md-3 col-sm-6">
+                <label for="data_inicio" class="form-label">Data de início - evento danoso (mês/ano):</label>
+                <input type="month" class="form-control" id="data_inicio" name="data_inicio"
+                       value="{{ valores[7]|default('', true) }}"> {# Required é tratado pelo JS #}
+                <div class="invalid-feedback">Se juros aplicados, informe a data do evento danoso.</div>
+            </div>
+        </div>
+
+        <hr>
+        <div class="row g-1 p-0 mb-2 align-items-end">
+            <div class="col-12"><p style="margin-bottom: 0;">Valor a ser atualizado</p></div>
+            <div class="col-md-3 col-sm-6">
+                <label for="data_atualizar" class="form-label">Data do arbitramento (mês/ano):</label>
+                <input type="month" class="form-control" id="data_atualizar" name="data_atualizar"
+                       value="{{ valores[8]|default('', true) }}" required>
+                <div class="invalid-feedback">Informe a data do arbitramento.</div>
+            </div>
+            <div class="col-md-1 d-none d-md-block"></div>
+            
+            <div class="col-md-2 col-sm-6">
+                <label for="valor" class="form-label">Valor:</label>
+                <input type="text" class="form-control" id="valor" name="valor" {# type="float" é inválido, mudado para text #}
+                       onchange="doDecimal(); return false;" oninput="formatarNumero(this)" 
+                       value="{{ valores[9]|default('', true) }}" required>
+                <div class="invalid-feedback">Informe o valor.</div>
+            </div>
+
+            <div class="col-md-3 d-none d-md-block"></div> {# Espaçador #}
+
+            <div class="col-md-3 col-12 text-md-end mt-3 mt-md-0"> {# Botão responsivo #}               
+                <button style="margin-top: 35px;" type="submit" class="btn btn-primary">CALCULAR</button>
+            </div>
+        </div>
+        
+        {# Condição para exibir resultados: request.method == 'POST' garante que 'valores' foi populado no POST #}
+        {# e 'resultado.total' verifica se há um resultado válido para mostrar #}
+        {% if request.method == 'POST' and resultado and resultado.total is defined and resultado.total != None %}
+        <hr>
+        <div id="wrapper" class="mt-3">
+            <div id="print-section">
+
+                <p class="resultado-campo"><strong>Processo: </strong>{{valores[1]}}</p>
+                <p class="resultado-campo"><strong>Competência: </strong>{{valores[2]}}</p>
+                <p class="resultado-campo"><strong>Exequente: </strong>{{valores[3]}}</p>
+                <p class="resultado-campo"><strong>Executado: </strong>{{valores[4]}}</p>
+                <p style="margin-bottom: 0;"><strong>Atualizado até: </strong>{{ dt_atualizacao }}</p>
+                <p style="margin-top: 0;"><strong>Data do evento danoso:</strong> {{ dt_danoso }}</p>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Mês/ano</th>
+                                <th scope="col">Principal</th>
+                                <th scope="col">Índice atualização monetaria até dez/2021</th>
+                                <th scope="col">Principal atualizado em dez/2021</th>
+                                <th scope="col">Juros de mora até dez/2021 (%)</th>
+                                <th scope="col">Valor juros de mora até dez/2021</th>
+                                <th scope="col">TOTAL EM DEZ/2021</th>
+                                <th scope="col">Taxa SELIC a partir de jan/2022 (EC-113)(%)</th>
+                                <th scope="col">Valor Selic</th>
+                                <th scope="col">TOTAL (principal + juros + SELIC)</th>
+                            </tr>
+                        </thead>
+                        <tbody>                            
+                            <tr>
+                                <td style="text-align: center;">{{ dt_mesano }}</td>
+                                <td style="text-align: center;">{{ resultado.valor }}</td>
+                                <td style="text-align: center;">{{ resultado.iam }}</td>
+                                <td style="text-align: center;">{{ resultado.corrigido }}</td>
+                                <td style="text-align: center;">{{ resultado.juros }}</td>
+                                <td style="text-align: center;">{{ resultado.valor_juros }}</td>
+                                <td style="text-align: center;">{{ resultado.subtotal }}</td>
+                                <td style="text-align: center;">{{ resultado.selic }}</td>
+                                <td style="text-align: center;">{{ resultado.valor_selic }}</td>
+                                <td style="text-align: center;">{{ resultado.total }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>    
+        <div class="no-print mt-3 mb-3"> {# Adicionado no-print para os botões #}
+            <button class="btn btn-success" onclick="imprimirTabela()">
+                <i class="bi bi-printer"></i> Imprimir
+            </button>
+            {# Convertido para Flask/Jinja2 #}
+            <a href="{{ url_for('pnn.pnn23') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-clockwise"></i> Reiniciar
+            </a>
+        </div>
+        <br><br> 
+        {% endif %}
+    </form>
+</div>
+
+{# Link para o script JavaScript externo #}
+<script src="{{ url_for('pnn.static', filename='js/pnn_scripts.js') }}"></script>
+</body>
+</html>
