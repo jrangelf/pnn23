@@ -1,11 +1,10 @@
-from flask import render_template, request, url_for 
+from flask import render_template, request
 from datetime import datetime, date
 
-from . import pnn_bp # Importa o Blueprint definido em pnn/__init__.py
+from . import pnn_bp 
 
-# Ajuste os caminhos de importação se suas classes estiverem em arquivos diferentes
-from pnn.api_indice import ApiIndice # Supondo que api_indice.py está em pnn/
-from pnn.acd_utils import Utils     # Supondo que acd_utils.py está em pnn/
+from pnn.api_indice import ApiIndice 
+from pnn.acd_utils import Utils     
 
 def _format_decimal(value, precision=2):
     if isinstance(value, (int, float)):
@@ -14,7 +13,7 @@ def _format_decimal(value, precision=2):
         except (TypeError, ValueError): return str(value)
     return str(value)
 
-@pnn_bp.route('/') # Rota raiz DO BLUEPRINT pnn
+@pnn_bp.route('/') 
 def index():
     return render_template('index.html', message="Bem-vindo ao PNN (Blueprint Index)")
 
@@ -37,14 +36,13 @@ def pnn23():
     # 'resultado_dict_for_template' conterá os resultados calculados e formatados
     resultado_dict_for_template = {} 
     
-    # Strings para exibição de datas e o valor original
-    str_dt_atualizacao = "" # Para a chave 'dt_atualizacao' no contexto
-    str_mesano = ""         # Para a chave 'dt_mesano' no contexto
-    str_valor = ""          # Para a chave 'str_valor' no contexto (valor original do input)
-    str_dt_danoso = ""      # Para a chave 'dt_danoso' no contexto
     
-    if request.method == 'POST':
-        # Coleta dos dados do formulário
+    str_dt_atualizacao = "" 
+    str_mesano = ""         
+    str_valor = ""          
+    str_dt_danoso = ""      
+    
+    if request.method == 'POST':        
         processo_form = request.form.get('processo', '')
         competencia_form = request.form.get('competencia', '')
         exequente_form = request.form.get('exequente', '')
@@ -52,13 +50,11 @@ def pnn23():
         dt_atual_str_form = request.form.get('atualizacao', '')
         bt_juros_str_form = request.form.get('aplicar_juros', 'off')
         dt_danoso_str_form = request.form.get('data_inicio', '')
-        dt_arbitra_str_form = request.form.get('data_atualizar', '')
-        # 'valor_str_input' armazena o valor original do campo 'valor' do formulário
+        dt_arbitra_str_form = request.form.get('data_atualizar', '')        
         valor_str_input = request.form.get('valor', '0') 
-
-        # Preenche a lista 'valores_list_for_template' para o template
+        
         valores_list_for_template = [
-            "dummy_csrf",
+            "csrf",
             processo_form,
             competencia_form,
             exequente_form,
@@ -67,12 +63,11 @@ def pnn23():
             bt_juros_str_form,
             dt_danoso_str_form,
             dt_arbitra_str_form,
-            valor_str_input # O valor original do formulário
+            valor_str_input 
         ]
-        # 'str_valor' no contexto receberá o valor original do input
+        
         str_valor = valor_str_input
-
-        # --- Lógica de cálculo (mantida como no seu original) ---
+        
         dados_tabela_juros = ApiIndice.get_tabela(TAB_JUROS)
 
         ano_danoso, mes_danoso = None, None
@@ -80,7 +75,7 @@ def pnn23():
             try:
                 ano_danoso_parts, mes_danoso_parts = dt_danoso_str_form.split('-')
                 ano_danoso, mes_danoso = int(ano_danoso_parts), int(mes_danoso_parts)
-                str_dt_danoso = f'{mes_danoso:02d}/{ano_danoso}' # Atualiza a variável de display
+                str_dt_danoso = f'{mes_danoso:02d}/{ano_danoso}' 
             except ValueError: pass
 
         ano_atualiza, mes_atualiza = None, None
@@ -88,7 +83,7 @@ def pnn23():
             try:
                 ano_atualiza_parts, mes_atualiza_parts = dt_atual_str_form.split('-')
                 ano_atualiza, mes_atualiza = int(ano_atualiza_parts), int(mes_atualiza_parts)
-                str_dt_atualizacao = f'{mes_atualiza:02d}/{ano_atualiza}' # Atualiza a variável de display
+                str_dt_atualizacao = f'{mes_atualiza:02d}/{ano_atualiza}' 
             except ValueError: pass
 
         ano_arbitra, mes_arbitra = None, None
@@ -96,7 +91,7 @@ def pnn23():
             try:
                 ano_arbitra_parts, mes_arbitra_parts = dt_arbitra_str_form.split('-')
                 ano_arbitra, mes_arbitra = int(ano_arbitra_parts), int(mes_arbitra_parts)
-                str_mesano = f'{mes_arbitra:02d}/{ano_arbitra}' # Atualiza a variável de display
+                str_mesano = f'{mes_arbitra:02d}/{ano_arbitra}' 
             except ValueError: pass
         
         data_de_hoje_date_obj = date(ano_hoje, mes_hoje, 1)
@@ -117,7 +112,7 @@ def pnn23():
                         parte2 = ApiIndice.get_tabela_mes_ano(TAB_SELIC, str(mes_arbitra), str(ano_arbitra))['selic_acumulada']
                         selic = parte1 - parte2
                     except (TypeError, KeyError): selic = 0.0
-                if data_atualizacao_obj < data_de_hoje_date_obj: # Esta condição pode precisar de revisão lógica
+                if data_atualizacao_obj < data_de_hoje_date_obj: 
                     try:
                         parte1 = ApiIndice.get_tabela_mes_ano(TAB_SELIC, str(mes_atualiza), str(ano_atualiza))['selic_acumulada']
                         parte2 = ApiIndice.get_tabela_mes_ano(TAB_SELIC, str(mes_arbitra), str(ano_arbitra))['selic_acumulada']
@@ -129,8 +124,7 @@ def pnn23():
                         parte2 = ApiIndice.get_tabela_mes_ano(TAB_SELIC, str(mes_arbitra), str(ano_arbitra))['selic_acumulada']
                         selic = parte1 - parte2
                     except (TypeError, KeyError): selic = 0.0
-            # else: selic continua 0.0 (ano_atualiza <= 2021)
-        # else: selic continua 0.0 (datas cruciais ausentes)
+            
         if selic < 0: selic = 0.0
 
         juros = 0.0
