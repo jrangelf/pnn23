@@ -102,13 +102,4 @@ pnn/
 
 ---
 
-## Próximos Passos e Contribuições
-
-Este projeto pode ser expandido de várias formas. Contribuições são bem-vindas!
-
-* [ ] Adicionar novos tipos de cálculos (outras naturezas de processos).
-* [ ] Criar testes unitários e de integração para garantir a precisão dos cálculos.
-* [ ] Melhorar a interface do usuário (UI/UX) com um framework JavaScript moderno (React, Vue.js).
-* [ ] Implementar um sistema de autenticação para salvar históricos de cálculos por usuário.
-* [ ] Adicionar a funcionalidade de exportar o relatório de cálculo para PDF ou Excel.
 
