@@ -1,7 +1,1 @@
-
-API_INDICE = 'http://api-indice:8004/'
-
-
-
-
-
+API_INDICE = 'http://sicalc.agu.gov.br:8004/'

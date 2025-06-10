@@ -81,12 +81,12 @@
         <div class="row g-1 p-0 mb-2 align-items-center">
             <div class="col-md-3 col-sm-6">
                 <p>Juros de mora</p>
-                <div class="form-check form-switch ">
-                    <input type="hidden" name="aplicar_juros" value="off">
+                <div class="form-check form-switch ">                    
                     <input class="form-check-input" type="checkbox" id="aplicar_juros" name="aplicar_juros" value="on" 
-                           checked> 
+                           {% if valores[6] == 'on' or valores[6] == '' %}checked{% endif %}>        
                     <label class="form-check-label" for="aplicar_juros">Aplicar juros</label>
-                </div>
+                </div>               
+                
             </div>
             <div class="col-md-1 d-none d-md-block"></div>
             <div class="col-md-8 col-sm-6">

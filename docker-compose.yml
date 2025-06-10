@@ -11,6 +11,7 @@ services:
     working_dir: /app      
     environment:
       - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
     restart: unless-stopped
 networks:  
   siscalc:

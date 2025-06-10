@@ -6,11 +6,31 @@ from . import pnn_bp
 from pnn.api_indice import ApiIndice 
 from pnn.acd_utils import Utils     
 
+from pnn.configura_debug import *
+
+# def _format_decimal(value, precision=2):
+#     if isinstance(value, (int, float)):
+#         try:
+#             return f"{value:.{precision}f}".replace('.', ',')
+#         except (TypeError, ValueError): return str(value)
+#     return str(value)
+
+
 def _format_decimal(value, precision=2):
     if isinstance(value, (int, float)):
         try:
-            return f"{value:.{precision}f}".replace('.', ',')
-        except (TypeError, ValueError): return str(value)
+            # 1. Formata o número com separador de milhar (,) e decimal (.)
+            #    Ex: 1947.96  -> '1,947.96'
+            formatted_string = f'{value:,.{precision}f}'
+            
+            # 2. Troca os separadores para o padrão brasileiro
+            #    Primeiro, troca a vírgula por um placeholder (#)
+            #    Depois, troca o ponto por uma vírgula
+            #    Finalmente, troca o placeholder por um ponto
+            #    '1,947.96' -> '1#947.96' -> '1#947,96' -> '1.947,96'
+            return formatted_string.replace(',', '#').replace('.', ',').replace('#', '.')
+        except (TypeError, ValueError):
+            return str(value) # Retorna como string se houver erro de formatação
     return str(value)
 
 @pnn_bp.route('/') 
@@ -18,12 +38,12 @@ def index():
     return render_template('index.html', message="Bem-vindo ao PNN (Blueprint Index)")
 
 @pnn_bp.route('/pnn23', methods=['GET', 'POST']) 
-def pnn23(): 
+def pnn23():    
     TAB_INDICE = 't202_tabela_pnep'
     TAB_JUROS = 't310_juros_pnn'
     TAB_SELIC = 'selic_acumulada'
-    DATA_CITACAO_BASE_JUROS = '01/01/1960'
-    DATA_LIMITE_JUROS_CALC = '01/12/2021'
+    DATA_CITACAO = '01/01/1960'
+    DATA_ATUALIZACAO = '01/12/2021'
 
     data_hoje_obj = datetime.now()
     mes_hoje = data_hoje_obj.month
@@ -130,9 +150,9 @@ def pnn23():
         juros = 0.0
         if bt_juros_str_form == 'on':
             if mes_danoso and ano_danoso:
-                data_evento_danoso_fmt = f'01/{mes_danoso:02d}/{ano_danoso}'
+                data_evento_danoso_fmt = f'01/{mes_danoso:02d}/{ano_danoso}'                
                 try:
-                    juros_raw = Utils.montar_tabela_juros_pnep(dados_tabela_juros, DATA_LIMITE_JUROS_CALC, DATA_CITACAO_BASE_JUROS, data_evento_danoso_fmt)
+                    juros_raw = Utils.montar_tabela_juros_pnep(dados_tabela_juros, DATA_ATUALIZACAO, DATA_CITACAO, data_evento_danoso_fmt)
                     juros = juros_raw if juros_raw and juros_raw >= 0 else 0.0
                 except Exception: juros = 0.0
         
@@ -157,7 +177,6 @@ def pnn23():
         subtotal_calc = corrigido_calc + valor_juros_calc
         valor_selic_calc = selic * subtotal_calc
         total_final_calc = valor_selic_calc + subtotal_calc
-        # --- Fim da lógica de cálculo ---
 
         # Preenche 'resultado_dict_for_template' com os valores calculados e FORMATADOS
         resultado_dict_for_template['valor'] = _format_decimal(valor_principal_calc, 2)

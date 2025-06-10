@@ -25,4 +25,6 @@ ENV PATH="/usr/sbin:/usr/bin:/sbin:/bin:${PATH}"
 ENV PYTHONPATH=/app
 
 
+
+#CMD ["gunicorn", "--bind", "0.0.0.0:8008", "--reload", "wsgi:app"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8008", "--worker-class", "gevent", "--workers", "9", "wsgi:app"]
